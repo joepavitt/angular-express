@@ -1,0 +1,19 @@
+{
+  "name": "d3boilerplate",
+  "version": "0.0.0",
+  "authors": [
+    "Joe Pavitt <joepavit@uk.ibm.com>"
+  ],
+  "license": "NONE",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "d3": "~3.5.5"
+  }
+}
