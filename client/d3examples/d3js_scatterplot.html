@@ -1,0 +1,114 @@
+<!--
+ <copyright
+     notice="cics-lm-source"
+     years="2014"
+     crc="1132452321" >
+     Licensed Materials - Property of IBM
+     (C) Copyright IBM Corp. 2014
+</copyright>
+-->
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.min.js"></script>
+
+<style>
+	.plot{
+		background-color: #eee;
+	}
+
+	.label{
+		fill: white;
+		font-size:10pt;
+	}
+
+	.axis path,
+	.axis line {
+	    fill: none;
+	    stroke: black;
+	    shape-rendering: crispEdges;
+	}
+
+	.axis text {
+	    font-family: sans-serif;
+	    font-size: 11px;
+	}
+</style>
+
+<script>
+
+var width = 400,
+	height = 400,
+	radius = 10,
+	padding = 20;
+
+function onload(){
+	var dataset = [{"x": 20, "y": 30}, {"x": 60, "y": 25},
+	               {"x": 50, "y": 30}, {"x": 23, "y": 20},
+	               {"x": 20, "y": 10}, {"x": 70, "y": 5},
+	               {"x": 20, "y": 10}, {"x": 29, "y": 5},
+	               {"x": 5, "y": 60}, {"x": 40, "y": 55}];
+
+	var x_scale = d3.scale.linear()
+	    .domain([0, d3.max(dataset, function(d) { return d.x; })])
+	    .range([padding, width-padding]);
+
+	var xAxis = d3.svg.axis()
+		.scale(x_scale)
+		.orient("bottom")
+		.ticks(5);  //Set rough # of ticks
+
+	var y_scale = d3.scale.linear()
+	    .domain([0, d3.max(dataset, function(d) { return d.y; })])
+	    .range([height-padding, padding]);
+
+	var yAxis = d3.svg.axis()
+		.scale(y_scale)
+		.orient("left")
+		.ticks(10, "");
+
+	var svg = d3.select(".plot")
+		.attr("width", width)
+		.attr("height", height);
+
+	svg.append("g")
+		.attr("class", "axis")
+		.call(xAxis)
+		.attr("transform", "translate(0," + (height-padding)+ ")")
+
+	svg.append("g")
+		.attr("class", "axis")
+		.call(yAxis)
+		.attr("transform", "translate("+padding+",0)");
+
+	svg.selectAll("circle")
+		.data(dataset)
+		.enter()
+		.append("circle")
+		.attr("cx", function(d) { return x_scale(d.x); })
+		.attr("cy", function(d) { return y_scale(d.y); })
+		.attr("r", function(d) { return radius/2; })
+		.style("fill", function(d,i) { return (i%2==1) ? "black" : "red"});
+
+	svg.selectAll("text")
+	   .data(dataset)
+	   .enter()
+	   .append("text")
+	   .text(function(d) {
+	        return d.x + "," + d.y;
+	   })
+	   .attr("x", function(d) {
+        return x_scale(d.x);;
+	   })
+	   .attr("y", function(d) {
+	        return y_scale(d.y);
+	   })
+	   .attr("class","label")
+	   .style("text-anchor", "middle")
+	   .attr("dy", radius+"px");
+}
+
+</script>
+
+<body onload="onload()">
+	<svg class="plot"></svg>
+</body>

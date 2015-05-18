@@ -1,0 +1,202 @@
+<!--
+ <copyright
+     notice="cics-lm-source"
+     years="2014"
+     crc="1132452321" >
+     Licensed Materials - Property of IBM
+     (C) Copyright IBM Corp. 2014
+</copyright>
+-->
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.min.js"></script>
+
+<style>
+.container{
+	border:1px solid black;
+}
+
+.node {
+	stroke: #fff;
+	stroke-width: 2.5px;
+}
+
+.link {
+	stroke: #777;
+}
+
+.tooltip{
+	position: absolute;
+	z-index: 10;
+	visibility: hidden;
+	border: 1px solid black;
+	padding: 5px;
+	background-color: beige;
+}
+</style>
+
+<script>
+
+var nodes = [{x: 120, y: 5},{x: 330, y: 140},{x: 100, y: 120},{x: 240, y: 280},
+             {x: 10, y: 250},{x: 325, y: 240},{x: 120, y: 90},{x: 390, y: 70},
+             {x: 150, y: 30},{x: 220, y: 130}];
+
+var links = [{"from": 0, "to": 1, "time" : 900},{"from": 0, "to": 2, "time" : 100},
+             {"from": 1, "to": 0, "time" : 750},{"from": 4, "to": 3, "time" : 1500},
+             {"from": 0, "to": 3, "time" : 1900},{"from": 1, "to": 2, "time" : 500},
+             {"from": 1, "to": 3, "time" : 500},{"from": 3, "to": 5, "time" : 900},
+             {"from": 3, "to": 8, "time" : 300},{"from": 5, "to": 6, "time" : 700},
+             {"from": 6, "to": 7, "time" : 2000},{"from": 6, "to": 8, "time" : 1300},
+             {"from": 7, "to": 9, "time" : 3000},{"from": 8, "to": 9, "time" : 1900}];
+
+var paths = [];
+
+function NetworkChart(){
+	network = function(data_nodes, data_links){
+		var chart = d3.select("#chart");
+
+		// set x and y coordinates of each link based on index of node
+		data_links.forEach(function(d) {
+		    d.from = data_nodes[d.from];
+		    d.to = data_nodes[d.to];
+		    path = new Array(d.from,d.to);
+		    paths.push(path);
+		  });
+
+		var links = chart.append("g")
+		      .attr("class", "links");
+
+		var lines = links.append("g").attr("class","lines").selectAll("line").data(data_links);
+
+		/* var link = lines.enter().append("line")
+			  .attr("class","link")
+		      .attr("x1", function(d) { return d.from.x; })
+		      .attr("y1", function(d) { return d.from.y; })
+		      .attr("x2", function(d) { return d.to.x; })
+		      .attr("y2", function(d) { return d.to.y; }); */
+
+		var link = lines.enter().append("path")
+			  .attr("class","link")
+              .attr("d", function(d,i) { return lineToPath(paths[i]); })
+
+		var markers = links.append("g").attr("class","markers").selectAll("circle").data(data_links);
+
+		var marker = markers.enter().append("circle")
+			  .style("fill","black")
+			  .attr("r", 2)
+			  .attr("cx", function(d) { return d.from.x; })
+			  .attr("cy", function(d) { return d.from.y; })
+			  .transition()
+			  .duration(function(d) { return d.time; })
+			  .ease("linear")
+			  .each(slide)
+
+		function slide(d) {
+		  var circle = d3.select(this);
+		  (function repeat() {
+		    circle = circle.transition()
+		    	.duration(function(d) { return 2*d.time; })
+		        .attr("cx", function(d){return d.to.x;})
+		        .attr("cy", function(d){return d.to.y;})
+		       .transition()
+		       .duration(10)
+		        .attr("cx", function(d){return d.from.x;})
+		        .attr("cy", function(d){return d.from.y;})
+		        .each("end", repeat);
+		  })();
+		}
+
+		var nodes = chart.append("g").attr("class","nodes").selectAll("circle")
+			.data(data_nodes);
+
+		nodes.enter().append("circle")
+			.style("fill","green")
+			.attr("r", 4)
+			.attr("cx", function(d) { return d.x; })
+			.attr("cy", function(d) { return d.y; })
+			.call(d3.behavior.drag()
+			        .origin(function(d) { return d; })
+			        .on("drag", function(d, i) {
+			          d.x = d3.event.x, d.y = d3.event.y;
+			          d3.select(this).attr("cx", d.x).attr("cy", d.y);
+			          //link.filter(function(l) { return l.from === d; }).attr("x1", d.x).attr("y1", d.y);
+			          //link.filter(function(l) { return l.to === d; }).attr("x2", d.x).attr("y2", d.y);
+
+			          p = paths.filter(function(p) { return p[0] === d; });
+			          p.forEach(function(p_d){
+			        	  p_d[0] = d;
+			          });
+			          p = paths.filter(function(p) { return p[1] === d; });
+			          p.forEach(function(p_d){
+			        	  p_d[1] = d;
+			          });
+			          link.attr("d", function(d,i) { return lineToPath(paths[i]); });
+			          tooltip.html("Node: " + i + "<br>" + "Coordinates: (" + parseInt(d.x) + "," + parseInt(d.y) + ")");
+			        }));
+
+		nodes.on('mouseover', function(d , i) {
+			  d3.select(this).attr("r",6);
+			  link.style('stroke-width', function(l) {
+			    if (d === l.from || d === l.to)
+			      return 2;
+			    else
+			      return 1;
+			  });
+			  link.style('stroke', function(l) {
+			    if (d === l[0] || d === l[1])
+			      return "red";
+			    else
+			      return "#999";
+			  });
+			  tooltip.style("visibility", "visible");
+			  tooltip.html("Node: " + i + "<br>" + "Coordinates: (" + parseInt(d.x) + "," + parseInt(d.y) + ")");
+			});
+
+		nodes.on("mousemove", function() {
+			return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");
+		});
+
+		// Set the stroke width back to normal when mouse leaves the node.
+		nodes.on('mouseout', function() {
+		  d3.select(this).attr("r",4);
+		  link.style('stroke-width', 1);
+		  link.style('stroke', "#999");
+		  tooltip.style("visibility", "hidden");
+		});
+
+		var tooltip = d3.select("body")
+			.append("div")
+			.attr("class","tooltip")
+			.text("a simple tooltip");
+	}
+
+	return network;
+}
+
+function onload(){
+	var width = 400,
+		height = 400,
+	    padding = 20;
+
+	svg = d3.select("body").append("svg")
+			.attr("class","container")
+		    .attr("width", width + padding + padding)
+		    .attr("height", height + padding + padding);
+
+	svg.append("g")
+	    .attr("id", "chart")
+	    .attr("transform", "translate(" + padding + "," + padding + ")");
+
+	chart = new NetworkChart();
+	chart(nodes,links);
+}
+
+var lineToPath = d3.svg.line()
+	.x(function(d,i) {return d.x})
+	.y(function(d,i) {return d.y})
+    .interpolate("cardinal");
+
+</script>
+
+<body onload="onload()">
+</body>

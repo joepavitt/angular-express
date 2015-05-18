@@ -1,0 +1,324 @@
+<!--
+ <copyright
+     notice="cics-lm-source"
+     years="2014"
+     crc="1132452321" >
+     Licensed Materials - Property of IBM
+     (C) Copyright IBM Corp. 2014
+</copyright>
+-->
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.min.js"></script>
+
+<style>
+.tooltip{
+	visibility: hidden;
+	font-size: 10pt;
+	font-family: arial;
+	border: 1px solid black;
+	padding:3px;
+	position: absolute;
+	background-color:beige;
+}
+
+.radar-chart-serie0{
+	stroke-width: 1px;
+	stroke: green;
+	fill: url(#gradientSLA);
+	fill-opacity: 1.0;
+}
+
+.radar-chart-serie1{
+	stroke-width: 1.2px;
+	stroke: rgb(31, 119, 180);
+	fill: none;
+	fill-opacity: 1.0;
+}
+
+.radar-node-serie0{
+	stroke-width: 1px;
+	stroke: green;
+	fill: green;
+	fill-opacity: 0.6;
+}
+
+.radar-node-serie1{
+	stroke-width: 2px;
+	stroke: rgb(39, 93, 130);
+	fill: rgb(208, 208, 208);
+	fill-opacity: 1.0;
+}
+
+
+</style>
+
+<script>
+
+var data = [[{name: "A", value: 1},
+             {name: "B", value: 1},
+             {name: "C", value: 1},
+             {name: "D", value: 1},
+             {name: "E", value: 1},
+             {name: "F", value: 1}],
+            [{name: "A", value: 0.2},
+             {name: "B", value: 0.4},
+             {name: "C", value: 1.5},
+             {name: "D", value: 0.6},
+             {name: "E", value: 0.1},
+             {name: "F", value: 0.7}]];
+
+function SpiderChart(){
+	var cfg = {
+			 radius: 1,
+			 w: 300,
+			 h: 300,
+			 factor: 1,
+			 factorLegend: .85,
+			 levels: 5,
+			 maxValue: 1,
+			 radians: 2 * Math.PI,
+			 opacityArea: 0.5,
+			 ToRight: 5,
+			 TranslateX: 80,
+			 TranslateY: 30,
+			 ExtraWidthX: 100,
+			 ExtraWidthY: 100,
+			 color: d3.scale.category10(),
+			 scale: false
+	};
+
+	chart = function(data){
+		var chart = d3.select("#chart");
+		var structure = chart;//.append("g").attr("class","structure");
+		var plot = chart;//.append("g").attr("class","plot");
+
+		var allAxis = (data[0].map(function(i, j){return i.name}));
+		var total = allAxis.length;
+		var radius = cfg.factor*Math.min(cfg.w/2, cfg.h/2);
+		var Format = d3.format('%');
+		cfg.maxValue = 1.25;
+		cfg.maxValue = Math.max(cfg.maxValue, d3.max(data, function(i){return d3.max(i.map(function(o){return o.value;}))}));
+		console.log(data);
+		console.log(cfg.maxValue);
+
+		if (cfg.scale){
+			d3.selectAll('.levels').remove();
+
+			//Circular segments
+			 for(var j=0; j<cfg.levels-1; j++){
+			  var levelFactor = cfg.factor*radius*((j+1)/cfg.levels);
+			  structure.selectAll(".levels")
+			   .data(allAxis)
+			   .enter()
+			   .append("svg:line")
+			   .attr("x1", function(d, i){return levelFactor*(1-cfg.factor*Math.sin(i*cfg.radians/total));})
+			   .attr("y1", function(d, i){return levelFactor*(1-cfg.factor*Math.cos(i*cfg.radians/total));})
+			   .attr("x2", function(d, i){return levelFactor*(1-cfg.factor*Math.sin((i+1)*cfg.radians/total));})
+			   .attr("y2", function(d, i){return levelFactor*(1-cfg.factor*Math.cos((i+1)*cfg.radians/total));})
+			   .attr("class", "line")
+			   .style("stroke", "grey")
+			   .style("stroke-opacity", "0.75")
+			   .style("stroke-width", "0.3px")
+			   .attr("transform", "translate(" + (cfg.w/2-levelFactor) + ", " + (cfg.h/2-levelFactor) + ")");
+			}
+
+			//Text indicating at what % each level is
+			for(var j=0; j<cfg.levels; j++){
+			  var levelFactor = cfg.factor*radius*((j+1)/cfg.levels);
+			  structure.selectAll(".levels")
+			   .data([1]) //dummy data
+			   .enter()
+			   .append("svg:text")
+			   .attr("x", function(d){return levelFactor*(1-cfg.factor*Math.sin(0));})
+			   .attr("y", function(d){return levelFactor*(1-cfg.factor*Math.cos(0));})
+			   .attr("class", "legend")
+			   .style("font-family", "sans-serif")
+			   .style("font-size", "10px")
+			   .attr("transform", "translate(" + (cfg.w/2-levelFactor + cfg.ToRight) + ", " + (cfg.h/2-levelFactor) + ")")
+			   .attr("fill", "#737373")
+			   .text(Format((j+1)*cfg.maxValue/cfg.levels));
+			}
+		}
+
+
+		series = 0;
+
+		d3.selectAll('.axis').remove();
+		// axes
+		var axis = structure.selectAll(".axis")
+				.data(allAxis)
+				.enter()
+				.append("g")
+				.attr("class", "axis");
+
+		axis.append("line")
+			.attr("x1", cfg.w/2)
+			.attr("y1", cfg.h/2)
+			.attr("x2", function(d, i){return cfg.w/2*(1-cfg.factor*Math.sin(i*cfg.radians/total));})
+			.attr("y2", function(d, i){return cfg.h/2*(1-cfg.factor*Math.cos(i*cfg.radians/total));})
+			.attr("class", "line")
+			.style("stroke", "url(#gradientAxes)")
+			.style("stroke-width", "1px");
+
+		d3.selectAll('.legend').remove();
+		// axes labels
+	 	axis.append("text")
+			.attr("class", "legend")
+			.text(function(d){return d})
+			.style("font-family", "sans-serif")
+			.style("font-size", "11px")
+			.attr("text-anchor", "middle")
+			.attr("dy", "1.5em")
+			.attr("transform", function(d, i){return "translate(0, -10)"})
+			.attr("x", function(d, i){return cfg.w/2*(1-cfg.factorLegend*Math.sin(i*cfg.radians/total))-40*Math.sin(i*cfg.radians/total);})
+			.attr("y", function(d, i){return cfg.h/2*(1-Math.cos(i*cfg.radians/total))-20*Math.cos(i*cfg.radians/total);});
+
+	 	data.forEach(function(y, x){
+			var dataValues = [];
+			plot.selectAll(".nodes")
+				.data(y, function(j, i){
+				  dataValues.push(new Array(
+					cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)),
+					cfg.h/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total))
+				  ));
+				});
+			dataValues.push(dataValues[0]);
+
+			var area = plot.selectAll(".radar-chart-serie"+series)
+				 .data([dataValues]);
+			// enter - any new elements added
+			area.enter()
+				 .append("polygon")
+				 .attr("class", "radar-chart-serie"+series);
+
+			area.transition()
+		    	 .duration(750)
+				 .attr("points",function(d) {
+					 var str="";
+					 for(var pti=0;pti<dataValues.length;pti++){
+						 str=str+dataValues[pti][0]+","+dataValues[pti][1]+" ";
+					 }
+					 return str;
+				  })
+			series++;
+		});
+		series=0;
+
+		data.forEach(function(y,x){
+			// if not the SLA data
+			if (x!=0){
+				var ns = plot.selectAll(".radar-node-serie"+series)
+					.data(y);
+
+				ns.enter().append("circle")
+					.attr("class", "radar-node-serie"+series)
+					.attr('r', cfg.radius)
+					.attr("alt", function(j){return Math.max(j.value, 0)})
+					.attr("data-id", function(j){return j.axis})
+					.on('mouseover', function (d){
+						newX =  parseFloat(event.pageX)+10;
+						newY =  parseFloat(event.pageY)-20;
+
+						tooltip
+							.style('left', newX+"px")
+							.style('top', newY+"px")
+							.html(d.name + ": " + Format(d.value) + " of SLA")
+							.transition(200)
+							.style('visibility', "visible");
+						d3.select(this).transition(200)
+							.style("fill", "rgb(39, 93, 130)")
+							.attr("r",cfg.radius+2);
+					})
+					.on('mouseout', function(){
+						tooltip
+							.transition(200)
+							.style("visibility","hidden");
+						d3.select(this).transition(200)
+							.style("fill", "rgb(208, 208, 208)")
+							.attr("r",cfg.radius);
+					})
+
+				ns.transition()
+			    	.duration(750)
+					.attr("cx", function(j, i){
+						return cfg.w/2*(1-(Math.max(j.value, 0)/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total));
+					})
+					.attr("cy", function(j, i){
+					    return cfg.h/2*(1-(Math.max(j.value, 0)/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total));
+					})
+			}
+			series++;
+		})
+
+		//Tooltip
+		var tooltip = d3.select("body").append('div')
+				   .attr("class","tooltip");
+
+	}
+
+	chart.update = function(data){
+		chart(data)
+	}
+
+	return chart;
+}
+
+function onload(){
+	var width = 400,
+		height = 400,
+	    padding = 20;
+
+	svg = d3.select("body").append("svg")
+			.attr("class","container")
+		    .attr("width", width + padding + padding)
+		    .attr("height", height + padding + padding);
+
+	svg.append("g")
+	    .attr("id", "chart")
+	    .attr("transform", "translate(" + padding + "," + padding + ")");
+
+	var defs = svg.append("defs");
+
+	var gradient = defs.append("radialGradient")
+		.attr("id", "gradientSLA")
+		.attr("cx", "50%")
+		.attr("cy", "50%")
+		.attr("r","100%");
+
+		gradient.append("stop")
+		.attr("offset", "0%")
+		.attr("stop-color", "#fff")
+		.attr("stop-opacity", 0.6);
+
+		gradient.append("stop")
+		.attr("offset", "70%")
+		.attr("stop-color", "#c4eec0")
+		.attr("stop-opacity", 0.8);
+
+	var gradientAxes = defs.append("radialGradient")
+		.attr("id", "gradientAxes")
+		.attr("cx", "50%")
+		.attr("cy", "50%")
+		.attr("r","100%");
+
+		gradientAxes.append("stop")
+		.attr("offset", "0%")
+		.attr("stop-color", "#888")
+		.attr("stop-opacity", 1);
+
+		gradientAxes.append("stop")
+		.attr("offset", "70%")
+		.attr("stop-color", "white")
+		.attr("stop-opacity", 1.0);
+
+	chart = new SpiderChart();
+	chart(data);
+}
+
+
+
+</script>
+
+<body onload="onload()">
+</body>

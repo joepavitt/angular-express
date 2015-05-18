@@ -1,0 +1,194 @@
+<!--
+ <copyright
+     notice="cics-lm-source"
+     years="2014"
+     crc="1132452321" >
+     Licensed Materials - Property of IBM
+     (C) Copyright IBM Corp. 2014
+</copyright>
+-->
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<title>Region Flow</title>
+<style>
+
+.tooltip{
+	position: absolute;
+	z-index: 10;
+	visibility: hidden;
+	border: 1px solid black;
+	padding: 5px;
+	background-color: beige;
+	font-family: Arial;
+	font-size: 10pt;
+}
+</style>
+
+<script>
+
+var data = [{label: "TRN0", size: 120, speed: 1},{label: "TRN1", size: 58, speed: 5},
+             {label: "TRN2", size: 12, speed: 2},{label: "TRN3", size: 71, speed: 7},
+             {label: "TRN4", size: 20, speed: 6},{label: "TRN5", size: 35, speed: 9},
+             {label: "TRN6", size: 66, speed: 3},{label: "TRN7", size: 47, speed: 20}];
+
+function FlowChart(){
+	var scale_height = d3.scale.linear()
+	    .domain([0, 120])
+	    .range([0, 100], 1);
+
+	var scale_speed = d3.scale.linear()
+	    .domain([0, 20])
+	    .range([0, 20], 1);
+
+	flow = function(data){
+		var chart = d3.select("#chart");
+
+		var rects = chart.selectAll("rect").data(data);
+
+		var offset = 0;
+
+		var text = rects.enter().append("text")
+			.attr("transform",function(d){
+				var translate = "translate(200,"+(offset+(scale_height(d.size)/2)+(Math.min(15,scale_height(d.size)*0.9)/2))+")";
+				offset = offset + scale_height(d.size) + 1;
+				return translate;})
+			.text(function(d){return d.label;})
+			.style("text-anchor","middle")
+			.style("font-size",function(d){return Math.min(15,scale_height(d.size)*0.7)+"px";});
+
+		offset = 0;
+
+		var rect = rects.enter().append("rect")
+			.attr("width",400)
+			.attr("transform",function(d){
+				var translate = "translate(0,"+offset+")";
+				offset = offset + scale_height(d.size) + 1;
+				return translate;})
+			.attr("height",function(d){return scale_height(d.size);})
+			.attr("fill", function(d, i) { return "url(#grad" + i + ")"; });
+
+		var tooltip = d3.select("body")
+			.append("div")
+			.attr("class","tooltip")
+			.text("a simple tooltip");
+
+		rect.on('mouseover', function(d , i) {
+			d3.select(this).style("stroke-width","1px");
+			d3.select(this).style("stroke", "rgb(0, 0, 0)");
+			d3.select(this).style("stroke-dasharray","400px, " + scale_height(d.size) + "px, 400px");
+			tooltip.style("visibility", "visible");
+			tooltip.html(d.label + "<br>" + "Speed: " + d.speed + ", Size: " + d.size);
+		});
+
+		rect.on('mousemove', function(d , i) {
+			return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");
+		});
+
+		rect.on('mouseout', function(d , i) {
+			d3.select(this).style("stroke-width","0");
+			d3.select(this).style("stroke-dasharray","none");
+			tooltip.style("visibility", "hidden");
+		});
+
+		var grads = d3.select("body").select("svg").select("defs").selectAll("linearGradient").data(data)
+		    .enter().append("linearGradient")
+		    .attr("gradientUnits", "userSpaceOnUse")
+		    .attr("x", 0)
+		    .attr("y", 0)
+		    .attr("id", function(d, i) { return "grad" + i; });
+
+		grads.append("stop")
+			.attr("offset", function(d){return scale_speed(d.speed-40)+"%"})
+			.style("stop-color", function(d, i) { return color(i); })
+			.attr("stop-opacity", 0.2)
+			.attr("stage","start")
+			.transition()
+			.duration(500)
+			.each("end",beginFlow);
+		grads.append("stop")
+			.attr("offset", function(d){return scale_speed(d.speed)+"%"})
+			.style("stop-color", function(d, i) { return color(i); })
+			.attr("stop-opacity", 1)
+			.attr("stage","middle")
+			.transition()
+			.duration(500)
+			.each("end",beginFlow);
+		grads.append("stop")
+			.attr("offset", function(d){return scale_speed(d.speed+10)+"%"})
+			.style("stop-color", function(d, i) { return color(i); })
+			.attr("stop-opacity", 0.2)
+			.attr("stage","end")
+			.transition()
+			.duration(500)
+			.each("end",beginFlow);
+	}
+
+	beginFlow = function(d){
+		var grad = d3.select(this);
+		var stage = grad.attr("stage");
+
+		if (stage=="start"){
+			var grad_start = grad;
+			var grad_middle = d3.select(this.nextElementSibling);
+			var grad_end = d3.select(this.nextElementSibling.nextElementSibling);
+
+			var offset0 = parseInt(grad_start.attr("offset"));
+
+			if (offset0+scale_speed(d.speed)>=(100)){
+				grad_end.transition().duration(1).attr("offset", function(d){return "0%";});
+				grad_middle.transition().duration(1).attr("offset", function(d){return "-10%";});
+				grad_start.transition().duration(1).attr("offset", function(d){return "-50%";})
+					.each("end",beginFlow);
+			} else {
+				grad_end.transition().duration(40).attr("offset", function(d){
+					return (parseInt(grad_end.attr("offset"))+d.speed)+"%";
+				});
+				grad_middle.transition().duration(40).attr("offset", function(d){
+					return (parseInt(grad_middle.attr("offset"))+d.speed)+"%";
+				});
+				grad_start.transition().duration(40).attr("offset", function(d){
+					return (offset0+d.speed)+"%";
+				}).each("end",beginFlow);
+			}
+		}
+
+
+
+
+	}
+
+	return flow;
+}
+
+function onload(){
+	var width = 400,
+		height = 400,
+	    padding = 20;
+
+	svg = d3.select("body").append("svg")
+			.attr("class","container")
+		    .attr("width", width + padding + padding)
+		    .attr("height", height + padding + padding);
+
+	svg.append("g")
+	    .attr("id", "chart")
+	    .attr("transform", "translate(" + padding + "," + padding + ")");
+
+	var defs = svg.append("defs");
+
+	chart = new FlowChart();
+	chart(data);
+}
+
+var color = d3.scale.category20();
+
+var lineToPath = d3.svg.line()
+	.x(function(d,i) {return d.x})
+	.y(function(d,i) {return d.y})
+    .interpolate("cardinal");
+
+</script>
+
+<body onload="onload()">
+</body>
