@@ -1,7 +1,12 @@
+## App Dependencies
+
+Install NodeJS from here https://nodejs.org/ and then install bower using the node package manager (npm) that comes with NodeJS:
+ 
+    npm install -g bower
+
 ## Setting up the App
 
-To install the application, you will need to have installed "NodeJS" and "Bower". Then, 
-from the cmd line run the two following commands:
+Once git cloned, run the following commands having navugated to the relevant directory in the command line or terminal:
 
     npm install
     bower install
@@ -14,4 +19,4 @@ To run the app, from the cmd line call the following:
 
     npm start
     
-Then navigate to "localhost:3000" and you should see a list of available d3 examples.
+Then navigate to "localhost:3000" and you should see the app.
