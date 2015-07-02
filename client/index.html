@@ -1,21 +1,75 @@
+<!DOCTYPE html>
+<html>
+
 <head>
-    <script src="vendor/d3/d3.js"></script>
-    <script src="functions.js"></script>
-    <link rel="stylesheet" href="commons.css">
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="style/common.css">
+
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="app/app.js"></script>
+    <script src="app/directive.js"></script>
 </head>
 
+<body ng-app="App" ng-controller="AppCtrl">
+    <div class="container">
+        <!-- ng-show example -->
+        <h2 class="red">ng-show example</h2>
+        <input type="radio" name="tabs" value="1" ng-model="showtab">Tab 1
+        <br>
+        <input type="radio" name="tabs" value="2" ng-model="showtab">Tab 2
+        <br>
+        <input type="radio" name="tabs" value="3" ng-model="showtab">Tab 3
+        <br>
+        <div ng-show="showtab==1">This is the content for Tab 1, showing by default, click a different radio button!</div>
+        <div ng-show="showtab==2">Welcome to Tab 2</div>
+        <div ng-show="showtab==3">Tab 3 at your service...</div>
+
+        <!-- ng-class example -->
+        <h2>ng-class example</h2>
+        <select ng-model="showcolor">
+            <option value="red">Red</option>
+            <option value="blue">Blue</option>
+        </select>
+        <div ng-class="{red : showcolor=='red', blue : showcolor=='blue'}">My content will change color if you select one from the dropdown above</div>
 
 
-<p>List of d3 Examples:</p>
-<ul>
-    <li><a href="d3examples/d3js_autosvg.html" target="_blank">d3js_autosvg.html</a></li>
-    <li><a href="d3examples/d3js_basicsvg.html" target="_blank">d3js_basicsvg.html</a></li>
-    <li><a href="d3examples/d3js_cicsnetwork.html" target="_blank">d3js_cicsnetwork.html</a></li>
-    <li><a href="d3examples/d3js_flow.html" target="_blank">d3js_flow.html</a></li>
-    <li><a href="d3examples/d3js_nesteddata.html" target="_blank">d3js_nesteddata.html</a></li>
-    <li><a href="d3examples/d3js_network.html" target="_blank">d3js_network.html</a></li>
-    <li><a href="d3examples/d3js_regionflow.html" target="_blank">d3js_regionflow.html</a></li>
-    <li><a href="d3examples/d3js_reusableinteractivebar.html" target="_blank">d3js_reusableinteractivebar.html</a></li>
-    <li><a href="d3examples/d3js_scatterplot.html" target="_blank">d3js_scatterplot.html</a></li>
-    <li><a href="d3examples/d3js_spider.html" target="_blank">d3js_spider.html</a></li>
-</ul>
+        <!-- ng-model and filter example -->
+        <h2>ng-model and filter example</h2>
+        <label>Type in a number in the input, and the filter will automatically format it into a file size.</label>
+        <input ng-model="bytes" placeholder="Type a number here">
+        <p>{{ bytes | bytesfilter }} - That uses the custom filter I built</p>
+        <p>{{ bytes | number : 2 }} - This uses a pre-defined angular filter, others include "currency", "uppercase", "lowercase"</p>
+
+        <!-- ng-repeat and ng-click example -->
+        <h2>ng-repeat and ng-click example</h2>
+        <p>Type in a string or number in the input and the table will <i>filter</i> results containing the input, e.g. typing "a" filter's out John's entry.</p>
+        <input ng-model="searchStr">
+        <br><br>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="person in arrayOfPeople | orderBy : 'number' : true | filter : searchStr">
+                    <td>{{ person.name }}</td>
+                    <td>{{ person.number }}</td>
+                </tr>
+            </tbody>
+        </table>
+    <br>
+        <p>Click the button to randomise the numbers assigned to each person, the order should automatically change. <i>ng-click</i> is used such that it calls a function assigned to the controller's scope.</p>
+    <button ng-click="randomiseNumbers()">Randomise Numbers</button>
+
+
+        <!-- Directive Example -->
+        <h2>Directive Example</h2>
+        <my-directive></my-directive>
+    </div>
+</body>
+
+
+</html>
