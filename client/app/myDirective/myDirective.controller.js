@@ -1,4 +1,4 @@
-angular.module('App.directive', [])
+angular.module('App')
 
 // Controller
 .controller("DirectiveCtrl", ['$scope',

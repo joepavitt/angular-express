@@ -1,10 +1,13 @@
-angular.module('App', [
-    "App.directive"
-])
+/* The array here should detail the App's dependencies, even if
+there aren't any, this should remain an empty array, since this
+is also the trigger to create a new module.*/
 
-// Controller
+angular.module('App', [])
+
+// Controller - this could/should be separated into it's own app.controller.js,
+// but given that this is the only controller in this module, it has been left here for simplicity
 .controller("AppCtrl", ['$scope', 'myService',
-    function($scope, myService /*Inject myService*/) {
+    function($scope, /*Inject myService*/ myService ) {
         $scope.showtab = 1;
         $scope.showcolor = 'red';
         $scope.bytes = 1234;
@@ -70,24 +73,4 @@ angular.module('App', [
             });
         }
     }
-])
-
-.filter('bytesfilter', function() {
-    var units = ['bytes', 'kB', 'MB'];
-
-    return function filesize(bytes) {
-        var exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
-        var number = (bytes / Math.pow(1024, Math.floor(exponent))).toFixed(0);
-        return number + ' ' + units[exponent];
-    };
-})
-
-.directive('myDirective', function() {
-    return {
-        restrict: 'E', //This means that it will be used as an element, i.e. <header></header>
-        replace: true,
-        // Relative from index.html
-        templateUrl: "app/directive.html",
-        controller: "DirectiveCtrl"
-    };
-});
+]);
