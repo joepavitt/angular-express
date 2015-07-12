@@ -6,12 +6,14 @@
     <link rel="stylesheet" href="style/common.css">
 
     <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
     <script src="app/app.js"></script>
     <script src="app/directive.js"></script>
+    <script src="app/myService/myService.service.js"></script>
 </head>
 
-<body ng-app="App" ng-controller="AppCtrl">
+<body ng-app="App" ng-controller="AppCtrl" style="margin-bottom: 30px">
     <div class="container">
         <!-- ng-show example -->
         <h2 class="red">ng-show example</h2>
@@ -68,6 +70,22 @@
         <!-- Directive Example -->
         <h2>Directive Example</h2>
         <my-directive></my-directive>
+
+        <!-- REST API -->
+        <h2>REST API (using $http) Example</h2>
+        <i style="margin-bottom: 20px">[Check the console (right click and press 'Inspect Element' to view console) for the responses]</i>
+        <p>Complete a simple GET Request by pressing this button:</p>
+        <button ng-click="getStuff()">GET stuff from API</button>
+        <p>Insert a name for a device, if you leave it blank and then "submit" you should see a '400 Bad Request' Error:</p>
+        <form ng-submit="postDevice(deviceName1)">
+            <input type="text" ng-model="deviceName1">
+            <input type="submit" value="Submit">
+        </form>
+        <p>Insert any name and submit. The ng-submit function is built to purposely assemble the wrong JSON. Expect a '400 Bad Request' Error:</p>
+        <form ng-submit="postDeviceBadRequest(deviceName2)">
+            <input type="text" ng-model="deviceName2">
+            <input type="submit" value="Submit">
+        </form>
     </div>
 </body>
 
