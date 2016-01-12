@@ -1,11 +1,10 @@
 {
-  "name": "d3boilerplate",
+  "name": "AngularExpresssBoilerplate",
   "version": "0.0.0",
   "description": "d3 boilerplate hosted on an express server",
   "main": "server/app.js",
   "scripts": {
-    "start": "node server/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server/app.js"
   },
   "author": "Joe Pavitt (joepavit@uk.ibm.com)",
   "license": "NONE",
